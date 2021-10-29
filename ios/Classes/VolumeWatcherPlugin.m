@@ -3,6 +3,7 @@
 #import <MediaPlayer/MediaPlayer.h>
 
 @interface VolumeWatcherPlugin () <FlutterStreamHandler>
+@property (nonatomic, assign) BOOL isRegistered;
 @end
 
 @implementation VolumeWatcherPlugin {
@@ -171,8 +172,6 @@
 {
     if ([keyPath isEqualToString:@"outputVolume"]) {
         _eventSink(@([AVAudioSession sharedInstance].outputVolume));
-    } else {
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
 
@@ -181,6 +180,13 @@
  */
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+    if (@available(iOS 15, *)) {
+        @try {
+            [[AVAudioSession sharedInstance] removeObserver:self forKeyPath:@"outputVolume"];
+        } @catch(id exception) {
+            NSLog(@"remove observer outputVolume failed");
+        }
+    }
 }
 
 @end
